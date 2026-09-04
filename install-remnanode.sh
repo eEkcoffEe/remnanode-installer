@@ -32,6 +32,17 @@ echo " Extra ports    = ${EXTRA_PORTS[*]:-нет}"
 echo "=============================================="
 echo
 
+# ====================== Проверка: уже установлена ли нода ======================
+NODE_ALREADY_INSTALLED=false
+
+if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q "^remnanode$"; then
+    echo "[!] Контейнер remnanode уже существует — пропускаю установку ноды"
+    NODE_ALREADY_INSTALLED=true
+elif [[ -d /opt/remnanode ]] && [[ -f /opt/remnanode/docker-compose.yml ]]; then
+    echo "[!] Директория /opt/remnanode уже существует — пропускаю установку ноды"
+    NODE_ALREADY_INSTALLED=true
+fi
+
 # ====================== 1. Обновление системы + UFW ======================
 echo "[1/6] Обновление системы и установка UFW..."
 export DEBIAN_FRONTEND=noninteractive
@@ -39,26 +50,26 @@ apt update -y
 apt upgrade -y
 apt install -y ufw curl ca-certificates
 
-# ====================== 2. Установка Docker ======================
-echo "[2/6] Установка Docker..."
-if ! command -v docker &>/dev/null; then
-    curl -fsSL https://get.docker.com | sh
-    systemctl enable --now docker
-else
-    echo "Docker уже установлен"
-fi
+# ====================== 2-4. Установка Docker + ноды (только если ещё не стоит) ======================
+if [[ "$NODE_ALREADY_INSTALLED" == false ]]; then
+    echo "[2/6] Установка Docker..."
+    if ! command -v docker &>/dev/null; then
+        curl -fsSL https://get.docker.com | sh
+        systemctl enable --now docker
+    else
+        echo "Docker уже установлен"
+    fi
 
-# Docker Compose plugin
-if ! docker compose version &>/dev/null; then
-    apt install -y docker-compose-plugin || true
-fi
+    # Docker Compose plugin
+    if ! docker compose version &>/dev/null; then
+        apt install -y docker-compose-plugin || true
+    fi
 
-# ====================== 3. Создание директории и docker-compose.yml ======================
-echo "[3/6] Настройка remnanode..."
-mkdir -p /opt/remnanode
-cd /opt/remnanode
+    echo "[3/6] Настройка remnanode..."
+    mkdir -p /opt/remnanode
+    cd /opt/remnanode
 
-cat > docker-compose.yml <<EOF
+    cat > docker-compose.yml <<EOF
 services:
   remnanode:
     container_name: remnanode
@@ -77,15 +88,17 @@ services:
       - SECRET_KEY=${SECRET_KEY}
 EOF
 
-echo "docker-compose.yml создан"
+    echo "docker-compose.yml создан"
 
-# ====================== 4. Запуск контейнера ======================
-echo "[4/6] Запуск контейнера..."
-docker compose pull
-docker compose up -d
+    echo "[4/6] Запуск контейнера..."
+    docker compose pull
+    docker compose up -d
 
-sleep 3
-docker ps --filter name=remnanode
+    sleep 3
+    docker ps --filter name=remnanode
+else
+    echo "[2-4/6] Установка ноды пропущена (уже установлена)"
+fi
 
 # ====================== 5. Смена SSH-порта ======================
 echo "[5/6] Смена SSH-порта на ${NEW_SSH_PORT}..."
@@ -157,7 +170,7 @@ echo " Готово!"
 echo "=============================================="
 echo
 echo "Статус контейнера:"
-docker ps --filter name=remnanode
+docker ps --filter name=remnanode 2>/dev/null || echo "Контейнер не найден"
 echo
 echo "Открытые порты:"
 ss -tlnp | grep -E ":${NEW_SSH_PORT}|:${NODE_PORT}|:443" || true

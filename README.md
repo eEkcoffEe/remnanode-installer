@@ -1,3 +1,4 @@
+
 ```markdown
 # RemnaNode Installer
 
@@ -8,20 +9,20 @@
 ## Быстрый запуск (одна команда)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install.sh | bash -s -- "ВАШ_SECRET_KEY" [SSH_PORT] [порт1] [порт2] ...
+curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install-remnanode.sh | bash -s -- "ВАШ_SECRET_KEY" [SSH_PORT] [порт1] [порт2] ...
 ```
 
 ### Примеры:
 
 ```bash
 # Минимальный запуск (SSH = 20001, открыты 2222 и 443)
-curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install.sh | bash -s -- "my-secret-key"
+curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install-remnanode.sh | bash -s -- "my-secret-key"
 
 # Со своим SSH-портом
-curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install.sh | bash -s -- "my-secret-key" 22222
+curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install-remnanode.sh | bash -s -- "my-secret-key" 22222
 
 # Со своим SSH-портом + дополнительные порты
-curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install.sh | bash -s -- "my-secret-key" 20001 80 443 8443 10000
+curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install-remnanode.sh | bash -s -- "my-secret-key" 20001 80 443 8443 10000
 ```
 
 ### Параметры
@@ -53,11 +54,11 @@ curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/
 ## Ручная установка
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install.sh -o install.sh
-chmod +x install.sh
+curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install-remnanode.sh -o install-remnanode.sh
+chmod +x install-remnanode.sh
 
 # Запуск
-./install.sh "ВАШ_SECRET_KEY" 20001 80 443 8443
+./install-remnanode.sh "ВАШ_SECRET_KEY" 20001 80 443 8443
 ```
 
 ---
