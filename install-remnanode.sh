@@ -7,17 +7,28 @@ SECRET_KEY="${1:-}"
 NEW_SSH_PORT="${2:-20001}"
 NODE_PORT=2222
 
+# Все аргументы после второго — дополнительные порты
+shift 2 2>/dev/null || true
+EXTRA_PORTS=("$@")
+
 if [[ -z "$SECRET_KEY" ]]; then
     echo "Ошибка: нужно указать SECRET_KEY"
-    echo "Использование: $0 <SECRET_KEY> [SSH_PORT]"
-    echo "Пример: $0 \"my-super-secret-key\" 20001"
+    echo
+    echo "Использование:"
+    echo "  $0 <SECRET_KEY> [SSH_PORT] [доп.порт1] [доп.порт2] ..."
+    echo
+    echo "Примеры:"
+    echo "  $0 \"my-secret\""
+    echo "  $0 \"my-secret\" 22222"
+    echo "  $0 \"my-secret\" 20001 80 443 8443"
     exit 1
 fi
 
 echo "=============================================="
-echo " SECRET_KEY  = $SECRET_KEY"
-echo " SSH Port    = $NEW_SSH_PORT"
-echo " Node Port   = $NODE_PORT"
+echo " SECRET_KEY     = $SECRET_KEY"
+echo " SSH Port       = $NEW_SSH_PORT"
+echo " Node Port      = $NODE_PORT"
+echo " Extra ports    = ${EXTRA_PORTS[*]:-нет}"
 echo "=============================================="
 echo
 
@@ -37,7 +48,7 @@ else
     echo "Docker уже установлен"
 fi
 
-# Docker Compose (plugin)
+# Docker Compose plugin
 if ! docker compose version &>/dev/null; then
     apt install -y docker-compose-plugin || true
 fi
@@ -101,7 +112,6 @@ else
         echo "Port ${NEW_SSH_PORT}" >> "$CONFIG"
     fi
 
-    # Дополнительно отключаем старый порт 22, если он явно прописан
     sed -i -E 's|^[[:space:]]*#?[[:space:]]*Port[[:space:]]+22|#Port 22|' "$CONFIG" || true
 
     if ! sshd -t; then
@@ -120,12 +130,22 @@ ufw --force reset
 ufw default deny incoming
 ufw default allow outgoing
 
-# Разрешаем новые порты
+# Основные порты
 ufw allow ${NEW_SSH_PORT}/tcp comment 'SSH'
 ufw allow ${NODE_PORT}/tcp comment 'Remnanode'
 ufw allow 443/tcp comment 'HTTPS'
 
-# Явно удаляем 22, если вдруг остался
+# Дополнительные порты, которые указал пользователь
+for port in "${EXTRA_PORTS[@]}"; do
+    if [[ "$port" =~ ^[0-9]+$ ]]; then
+        echo "  + разрешаю порт $port"
+        ufw allow ${port}/tcp comment "Extra port"
+    else
+        echo "  ! пропущен некорректный порт: $port"
+    fi
+done
+
+# Удаляем 22
 ufw delete allow 22/tcp 2>/dev/null || true
 ufw delete allow 22 2>/dev/null || true
 
@@ -145,8 +165,5 @@ echo
 echo "Статус UFW:"
 ufw status verbose
 echo
-echo "Важно:"
-echo "1. Проверь, что можешь подключиться по SSH на порт ${NEW_SSH_PORT}"
-echo "2. SECRET_KEY = ${SECRET_KEY}"
-echo "3. Контейнер работает в network_mode: host"
+echo "Важно: проверьте SSH-подключение на порт ${NEW_SSH_PORT}"
 echo

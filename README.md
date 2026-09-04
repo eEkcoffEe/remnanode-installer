@@ -1,20 +1,3 @@
-Готово. Вот актуальные данные под твой репозиторий:
-
-### Команда для прямого запуска
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install.sh | bash -s -- "ВАШ_SECRET_KEY" 20001
-```
-
-**Пример:**
-```bash
-curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install.sh | bash -s -- "my-super-secret-key-123" 20001
-```
-
----
-
-### README.md (готовый к загрузке)
-
 ```markdown
 # RemnaNode Installer
 
@@ -25,18 +8,29 @@ curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/
 ## Быстрый запуск (одна команда)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install.sh | bash -s -- "ВАШ_SECRET_KEY" 20001
+curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install.sh | bash -s -- "ВАШ_SECRET_KEY" [SSH_PORT] [порт1] [порт2] ...
 ```
 
-### Пример:
+### Примеры:
+
 ```bash
-curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install.sh | bash -s -- "super-secret-key-12345" 20001
+# Минимальный запуск (SSH = 20001, открыты 2222 и 443)
+curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install.sh | bash -s -- "my-secret-key"
+
+# Со своим SSH-портом
+curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install.sh | bash -s -- "my-secret-key" 22222
+
+# Со своим SSH-портом + дополнительные порты
+curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install.sh | bash -s -- "my-secret-key" 20001 80 443 8443 10000
 ```
 
-| Параметр     | Обязательный | По умолчанию | Описание              |
-|--------------|--------------|--------------|-----------------------|
-| `SECRET_KEY` | Да           | —            | Секретный ключ ноды   |
-| `SSH_PORT`   | Нет          | `20001`      | Новый порт SSH        |
+### Параметры
+
+| Параметр       | Обязательный | По умолчанию | Описание                          |
+|----------------|--------------|--------------|-----------------------------------|
+| `SECRET_KEY`   | Да           | —            | Секретный ключ ноды               |
+| `SSH_PORT`     | Нет          | `20001`      | Новый порт SSH                    |
+| `порт1 порт2…` | Нет          | —            | Дополнительные порты для UFW      |
 
 ---
 
@@ -51,6 +45,7 @@ curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/
    - Открывает новый SSH-порт
    - Открывает порт ноды `2222`
    - Открывает `443`
+   - Открывает все дополнительные порты, которые вы указали
    - Закрывает порт `22`
 
 ---
@@ -60,7 +55,9 @@ curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/
 ```bash
 curl -fsSL https://raw.githubusercontent.com/eEkcoffEe/remnanode-installer/main/install.sh -o install.sh
 chmod +x install.sh
-./install.sh "ВАШ_SECRET_KEY" 20001
+
+# Запуск
+./install.sh "ВАШ_SECRET_KEY" 20001 80 443 8443
 ```
 
 ---
@@ -89,9 +86,3 @@ ss -tlnp | grep -E ':20001|:2222'
 
 [eEkcoffEe](https://github.com/eEkcoffEe)
 ```
-
----
-
-Скопируй `README.md` в репозиторий и загрузи скрипт как `install.sh`.  
-
-Хочешь, я ещё раз выведу полный актуальный `install.sh` под твой репозиторий?
